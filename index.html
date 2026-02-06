@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>桜が散る</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #ffeef5, #fff);
+  height: 100%;
+}
+canvas {
+  display: block;
+}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let W, H;
+
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W;
+  canvas.height = H;
+}
+resize();
+window.addEventListener("resize", resize);
+
+const petalImage = new Image();
+petalImage.src =
+  "data:image/svg+xml;base64," +
+  btoa(`
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30">
+<path fill="#f9c1d9" d="M15 2 C12 6, 8 8, 7 13 C6 18, 11 24, 15 28 C19 24, 24 18, 23 13 C22 8, 18 6, 15 2 Z"/>
+</svg>`);
+
+const petals = [];
+const MAX = 100;
+
+class Petal {
+  constructor() {
+    this.reset();
+  }
+
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * -H;
+    this.z = Math.random() * 0.5 + 0.5; // 深度感
+    this.size = this.z * 20 + 10;
+    this.speedY = this.z * 1.5 + 0.5;
+    this.speedX = Math.random() * 1 - 0.5;
+    this.angle = Math.random() * 360;
+    this.rotateSpeed = (Math.random() - 0.5) * 2;
+    this.swing = Math.random() * 100 + 50;
+  }
+
+  update() {
+    this.y += this.speedY;
+    this.x += Math.sin((this.y + this.angle) / this.swing) * this.z * 2 + this.speedX;
+    this.angle += this.rotateSpeed;
+
+    if (this.y > H + this.size) {
+      this.reset();
+      this.y = -this.size;
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate((this.angle * Math.PI) / 180);
+    ctx.drawImage(petalImage, -this.size / 2, -this.size / 2, this.size, this.size);
+    ctx.restore();
+  }
+}
+
+for (let i = 0; i < MAX; i++) {
+  petals.push(new Petal());
+}
+
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  for (let petal of petals) {
+    petal.update();
+    petal.draw();
+  }
+  requestAnimationFrame(animate);
+}
+
+petalImage.onload = animate;
+</script>
+</body>
+</html>
